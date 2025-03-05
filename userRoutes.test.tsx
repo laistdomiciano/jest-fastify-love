@@ -1,43 +1,59 @@
-// mathService.test.tsx
-// 4. Import Jest utilities and our function
-import { expect, jest, describe, beforeEach, test } from '@jest/globals';
-import { addToNumberFromDb } from './mathService';
-import * as db from './db';
+import { expect, jest, describe, beforeEach, afterAll, it } from "@jest/globals";
+import Fastify, { FastifyInstance } from "fastify";
+import { appPostgresDb } from "./databases/db";
+import { userRoutes } from "./userRoutes";
 
-// 5. Mock the database module
-jest.mock('./db', () => ({
-    getNumber: jest.fn(), // Replace real function with mock
+// 3. Mock the database
+jest.mock("./databases/db", () => ({
+  appPostgresDb: {
+    query: jest.fn(), // Mocked DB query function
+  },
 }));
 
-describe('addToNumberFromDb', () => {
-    // 6. Clear mocks before each test
-    beforeEach(() => {
-        jest.clearAllMocks();
+describe("User Routes Integration", () => {
+  let app: FastifyInstance;
+  const mockQuery = appPostgresDb.query as jest.Mock;
+
+  // 4. Setup Fastify before each test
+  beforeEach(async () => {
+    jest.clearAllMeters();
+    app = Fastify();
+    await app.register(userRoutes);
+  });
+
+  // 5. Cleanup
+  afterAll(async () => {
+    await app.close();
+  });
+
+  // 6. Test successful registration
+  it("should register a new user", async () => {
+    mockQuery.mockResolvedValueOnce([]); // No existing user
+    mockQuery.mockResolvedValueOnce([{ id: 1, email: "test@example.com", password: "pass" }]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/users/register",
+      payload: { email: "test@example.com", password: "pass" },
     });
 
-    // 7. Test case 1: Basic addition
-    test('should add database number to input', () => {
-        // 8. Set mock to return 5
-        (db.getNumber as jest.Mock).mockReturnValue(5);
+    expect(response.statusCode).toBe(201);
+    const result = JSON.parse(response.payload);
+    expect(result).toHaveProperty("accessToken");
+    expect(mockQuery).toHaveBeenCalledWith("SELECT * FROM users WHERE email = $1", ["test@example.com"]);
+  });
 
-        // 9. Call function with 3
-        const result = addToNumberFromDb(3);
+  // 7. Test duplicate user
+  it("should reject duplicate user", async () => {
+    mockQuery.mockResolvedValueOnce([{ id: 1, email: "test@example.com", password: "pass" }]);
 
-        // 10. Check if 3 + 5 = 8
-        expect(result).toBe(8);
-        expect(db.getNumber).toHaveBeenCalled(); // Verify DB call
+    const response = await app.inject({
+      method: "POST",
+      url: "/users/register",
+      payload: { email: "test@example.com", password: "pass" },
     });
 
-    // 11. Test case 2: Different value
-    test('should work with different DB value', () => {
-        // 12. Set mock to return 10
-        (db.getNumber as jest.Mock).mockReturnValue(10);
-
-        // 13. Call function with 2
-        const result = addToNumberFromDb(2);
-
-        // 14. Check if 2 + 10 = 12
-        expect(result).toBe(12);
-        expect(db.getNumber).toHaveBeenCalled();
-    });
+    expect(response.statusCode).toBe(400);
+    expect(JSON.parse(response.payload)).toHaveProperty("error");
+  });
 });
