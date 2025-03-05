@@ -1,77 +1,43 @@
-// Import Fastify and necessary modules
-import Fastify from "fastify";
-import { userRoutes } from "./userRoutes";
-import { appPostgresPool } from "./mockDatabase";
+// mathService.test.tsx
+// 4. Import Jest utilities and our function
+import { expect, jest, describe, beforeEach, test } from '@jest/globals';
+import { addToNumberFromDb } from './mathService';
+import * as db from './db';
 
-// Mock the database to prevent real database calls during testing
-jest.mock("./mockDatabase", () => ({
-    appPostgresPool: {
-        query: jest.fn(), // Mocked database query function
-    },
+// 5. Mock the database module
+jest.mock('./db', () => ({
+    getNumber: jest.fn(), // Replace real function with mock
 }));
 
-describe("User Routes", () => {
-    let app;
-
-    // Before each test, reset mocks and initialize a new Fastify instance
-    beforeEach(async () => {
-        jest.clearAllMocks(); // Reset all mocks before running each test
-        app = Fastify(); // Create a new Fastify instance
-        await app.register(userRoutes); // Register the user routes
+describe('addToNumberFromDb', () => {
+    // 6. Clear mocks before each test
+    beforeEach(() => {
+        jest.clearAllMocks();
     });
 
-    // Close Fastify instance after all tests to clean up resources
-    afterAll(async () => {
-        await app.close();
+    // 7. Test case 1: Basic addition
+    test('should add database number to input', () => {
+        // 8. Set mock to return 5
+        (db.getNumber as jest.Mock).mockReturnValue(5);
+
+        // 9. Call function with 3
+        const result = addToNumberFromDb(3);
+
+        // 10. Check if 3 + 5 = 8
+        expect(result).toBe(8);
+        expect(db.getNumber).toHaveBeenCalled(); // Verify DB call
     });
 
-    // Test successful user registration
-    it("should register a new user", async () => {
-        // Simulate database behavior:
-        appPostgresPool.query.mockResolvedValueOnce([]); // Step 1: No user exists
-        appPostgresPool.query.mockResolvedValueOnce([{ id: 1, email: "test@example.com" }]); // Step 2: User is created
+    // 11. Test case 2: Different value
+    test('should work with different DB value', () => {
+        // 12. Set mock to return 10
+        (db.getNumber as jest.Mock).mockReturnValue(10);
 
-        // Use Fastify's inject() method to simulate a POST request
-        const response = await app.inject({
-            method: "POST",
-            url: "/users/register",
-            payload: { email: "test@example.com", password: "password123" }, // Test payload
-        });
+        // 13. Call function with 2
+        const result = addToNumberFromDb(2);
 
-        // Expect 201 (Created) response status
-        expect(response.statusCode).toBe(201);
-
-        // Parse response data
-        const responseData = JSON.parse(response.payload);
-
-        // Check if the response contains the correct success message
-        expect(responseData).toHaveProperty("message", "User registered");
-    });
-
-    // Test missing required fields (email and password)
-    it("should return 400 error if fields are missing", async () => {
-        const response = await app.inject({
-            method: "POST",
-            url: "/users/register",
-            payload: {}, // Empty payload, missing email and password
-        });
-
-        expect(response.statusCode).toBe(400);
-        expect(JSON.parse(response.payload)).toHaveProperty("error", "Missing fields");
-    });
-
-    // Test registration failure (e.g., database error)
-    it("should return 500 if database query fails", async () => {
-        // Simulate database query failure
-        appPostgresPool.query.mockRejectedValueOnce(new Error("Database error"));
-
-        const response = await app.inject({
-            method: "POST",
-            url: "/users/register",
-            payload: { email: "test@example.com", password: "password123" },
-        });
-
-        expect(response.statusCode).toBe(500);
-        expect(JSON.parse(response.payload)).toHaveProperty("error");
+        // 14. Check if 2 + 10 = 12
+        expect(result).toBe(12);
+        expect(db.getNumber).toHaveBeenCalled();
     });
 });
