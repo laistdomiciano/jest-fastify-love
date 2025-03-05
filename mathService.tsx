@@ -1,18 +1,14 @@
-// This is the file we want to test
-const db = require('./db'); // Our pretend database
+// 1. Import our pretend database
+import { getNumber } from './db';
 
-// A simple function that gets a number from the database and adds to it
-function addToNumberFromDb(value) {
-  const dbNumber = db.getNumber(); // Get number from database
-  return value + dbNumber; // Add them together
+// 2. Simple function to add a number from the DB
+export function addToNumberFromDb(value: number): number {
+    const dbNumber: number = getNumber(); // Get number from "database"
+    return value + dbNumber; // Add them together
 }
 
-module.exports = { addToNumberFromDb }; // Make it available for testing
-
-// db.js
-// Our pretend database file
-function getNumber() {
-  return 10; // In real life, this would talk to a real database
+// db.tsx
+// 3. Pretend database function
+export function getNumber(): number {
+    return 10; // Normally would query a real DB
 }
-
-module.exports = { getNumber };
