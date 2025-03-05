@@ -1,19 +1,11 @@
 // Import Fastify framework
-import Fastify from "fastify";
+import Fastify, { FastifyInstance } from "fastify";
+import { appPostgresDb } from "./databases/db";
 
-// Define Insights API routes
-const insightsRouter = async (app) => {
-    // API endpoint for retrieving workspace insights summary
-    app.get("/insights/workspaces/:id/summary", async (request, reply) => {
-        const { id } = request.params; // Extract workspace ID from request
-        
-        if (!id) {
-            return reply.code(400).send({ error: "Missing workspace ID" });
-        }
-        
-        // Simulated response with workspace insights summary
-        return reply.code(200).send({ summary: "Insights summary for workspace " + id });
-    });
-};
-
-export { insightsRouter };
+// 1. Register insights route
+export async function insightsRoutes(app: FastifyInstance) {
+  app.get("/insights", async (_request, reply) => {
+    const insights = await appPostgresDb.query("SELECT COUNT(*) as total FROM users", []);
+    return reply.status(200).send({ totalUsers: insights[0].total });
+  });
+}
