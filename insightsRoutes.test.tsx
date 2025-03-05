@@ -1,64 +1,43 @@
-// Import Fastify and necessary modules
-import Fastify from "fastify";
-import { insightsRouter } from "./insightsRoutes";
-import { appPostgresPool } from "./mockDatabase";
+import { expect, jest, describe, beforeEach, afterAll, it } from "@jest/globals";
+import Fastify, { FastifyInstance } from "fastify";
+import { appPostgresDb } from "./databases/db";
+import { insightsRoutes } from "./insights";
 
-// Mock the database so actual queries are not executed
-jest.mock("./mockDatabase", () => ({
-    appPostgresPool: {
-        query: jest.fn(),
-    },
+// 2. Mock the database
+jest.mock("./databases/db", () => ({
+  appPostgresDb: {
+    query: jest.fn(),
+  },
 }));
 
-describe("Insights Routes", () => {
-    let app;
+describe("Insights Routes Integration", () => {
+  let app: FastifyInstance;
+  const mockQuery = appPostgresDb.query as jest.Mock;
 
-    // Before each test, reset mocks and initialize a new Fastify instance
-    beforeEach(async () => {
-        jest.clearAllMocks(); // Reset mocks between tests
-        app = Fastify(); // Create a new Fastify instance
-        await app.register(insightsRouter); // Register the routes
+  // 3. Setup
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    app = Fastify();
+    await app.register(insightsRoutes);
+  });
+
+  // 4. Cleanup
+  afterAll(async () => {
+    await app.close();
+  });
+
+  // 5. Test getting insights
+  it("should return total users", async () => {
+    mockQuery.mockResolvedValueOnce([{ total: 42 }]);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/insights",
     });
 
-    // Close Fastify instance after all tests are completed
-    afterAll(async () => {
-        await app.close();
-    });
-
-    // Test fetching insights summary for a valid workspace
-    it("should return insights summary for valid workspace", async () => {
-        // Mock the database response to return sample events
-        appPostgresPool.query.mockResolvedValueOnce({
-            rows: [{ eventType: "message_sent", timestamp: "2025-02-19T00:00:00Z" }],
-        });
-
-        // Use Fastify's inject() method to simulate an API request
-        const response = await app.inject({
-            method: "GET",
-            url: "/insights/workspaces/123/summary",
-            headers: { authorization: "Bearer test-token" }, // Simulate authentication if required
-        });
-
-        // Ensure the response status is 200 (OK)
-        expect(response.statusCode).toBe(200);
-
-        // Parse JSON response
-        const responseData = JSON.parse(response.payload);
-
-        // Validate response structure
-        expect(responseData).toHaveProperty("summary");
-    });
-
-    // Test handling of missing workspace ID
-    it("should return 400 error when workspace ID is missing", async () => {
-        const response = await app.inject({
-            method: "GET",
-            url: "/insights/workspaces//summary", // Invalid URL with missing ID
-        });
-
-        expect(response.statusCode).toBe(400);
-        expect(JSON.parse(response.payload)).toHaveProperty("error");
-    });
-
-    // Test unauthorized access (if authentication is implemented)
-    it("should return 401 er
+    expect(response.statusCode).toBe(200);
+    const result = JSON.parse(response.payload);
+    expect(result.totalUsers).toBe(42);
+    expect(mockQuery).toHaveBeenCalledWith("SELECT COUNT(*) as total FROM users", []);
+  });
+});
