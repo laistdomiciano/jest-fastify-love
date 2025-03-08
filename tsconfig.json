@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "jsx": "react",
+    "esModuleInterop": true,
+    "strict": true,
+
+    "types": ["jest", "node"]
+  },
+  "include": ["src/**/*"]
+}
