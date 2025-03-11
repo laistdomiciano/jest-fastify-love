@@ -36,6 +36,6 @@ npm test
 # For a specific test file (e.g., insightsRoutes.test.ts):
 
 ```
-npm test insightsRoutes.test.ts
+npm test insightsRoutes.test.tsx
 ```
 
