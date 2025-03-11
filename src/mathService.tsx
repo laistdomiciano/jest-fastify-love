@@ -1,6 +1,6 @@
 // Function we want to mock in tests
 export function getNumber(): number {
-  return 10;
+  throw new Error("Database connection failed!");
 }
 
 // Function we want to test that uses getNumber

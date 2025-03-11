@@ -3,7 +3,7 @@ import { jest, describe, beforeEach, it, expect } from "@jest/globals";
 // First, mock the module before importing it
 jest.mock("./mathService", () => ({
   // Mock implementation of getNumber
-  getNumber: jest.fn(() => 5),
+  getNumber: jest.fn(() => "5"),
 
   // This function will call the mocked getNumber
   addToNumberFromDb: (value: number) => {
