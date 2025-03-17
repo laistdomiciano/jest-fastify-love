@@ -7,15 +7,14 @@ import {
   expect,
 } from "@jest/globals";
 import Fastify, { FastifyInstance } from "fastify";
+import { appPostgresDb } from "./databases/db";
+import { insightsRoutes } from "./insightsRoutes";
 
 jest.mock("./databases/db", () => ({
   appPostgresDb: {
     query: jest.fn(),
   },
 }));
-
-import { appPostgresDb } from "./databases/db";
-import { insightsRoutes } from "./insightsRoutes";
 
 describe("Insights Routes", () => {
   let app: FastifyInstance;
@@ -35,7 +34,7 @@ describe("Insights Routes", () => {
   });
 
   it("should return insights total", async () => {
-    mockQuery.mockResolvedValueOnce([{ total: 42 }]);
+    mockQuery.mockResolvedValueOnce({ rows:[{ total: 42 }]) }];
 
     const response = await app.inject({
       method: "GET",
