@@ -14,6 +14,6 @@ export async function insightsRoutes(app: FastifyInstance): Promise<void> {
 
     const typedResult = result as unknown as QueryResult[];
 
-    return reply.send({ total: String(typedResult[0].total) });
+    return reply.send({ total: typedResult[0].total });
   });
 }
