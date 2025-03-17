@@ -1,18 +1,14 @@
 import { jest, describe, beforeEach, it, expect } from "@jest/globals";
+import { getNumber, addToNumberFromDb } from "./mathService";
 
 jest.mock("./mathService", () => ({
-  // Mock implementation of getNumber
   getNumber: jest.fn(() => "5"),
 
   addToNumberFromDb: (value: number) => {
-    // We need to call the mocked version of getNumber
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const mockGetNumber = require("./mathService").getNumber;
     return value + mockGetNumber();
   },
 }));
-
-import { getNumber, addToNumberFromDb } from "./mathService";
 
 describe("addToNumberFromDb", () => {
   beforeEach(() => {
