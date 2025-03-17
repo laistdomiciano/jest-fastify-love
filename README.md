@@ -21,11 +21,6 @@ cd jest-fastify-love
 npm install
 ```
 
-# Run tests
-```
-npm test
-```
-
 # Running the Tests
 To execute the test suite, use:
 
