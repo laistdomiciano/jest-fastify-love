@@ -9,17 +9,18 @@ import {
 } from "@jest/globals";
 import Fastify, { FastifyInstance } from "fastify";
 
-// 2 Mock Dependencies (Database)
+// 2 Import the Modules that Use the Mocked Database
+import { appPostgresDb } from "./databases/db";
+import { userRoutes } from "./userRoutes";
+
+
+// 3 Mock Dependencies (Database)
 // Prevent actual database calls by mocking `appPostgresDb.query`
 jest.mock("./databases/db", () => ({
   appPostgresDb: {
     query: jest.fn(),
   },
 }));
-
-// 3 Import the Modules that Use the Mocked Database
-import { appPostgresDb } from "./databases/db";
-import { userRoutes } from "./userRoutes";
 
 describe("User Routes", () => {
   let app: FastifyInstance;
