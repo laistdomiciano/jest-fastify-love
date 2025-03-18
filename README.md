@@ -8,7 +8,7 @@ This repository contains example test cases demonstrating unit and full integrat
 
 # Clone the repository
 ```
-git clone https://github.com/laistdomiciano/jest-fastify-love.git
+git clone git@github.com:laistdomiciano/jest-fastify-love.git
 ```
 
 # Navigate to the project directory
